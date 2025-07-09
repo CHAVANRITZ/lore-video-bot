@@ -1,0 +1,2 @@
+# This file ensures the temp directory is created in version control
+# Temporary files will be stored here during video processing
