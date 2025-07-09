@@ -121,8 +121,8 @@ class VideoService:
             True if successful, False otherwise
         """
         try:
-            # Create filter complex for smooth image transitions
-            filter_complex = self._build_filter_complex(image_paths, image_duration)
+            # Create filter complex for smooth image transitions with subtitles
+            filter_complex = self._build_filter_complex(image_paths, image_duration, script_data['script'])
             
             # FFmpeg command for vertical video with transitions
             cmd = [
@@ -178,13 +178,14 @@ class VideoService:
             logger.error(f"Error running FFmpeg: {e}")
             return False
     
-    def _build_filter_complex(self, image_paths: List[str], image_duration: float) -> str:
+    def _build_filter_complex(self, image_paths: List[str], image_duration: float, script_text: str) -> str:
         """
-        Build FFmpeg filter complex for cinematic image animations
+        Build FFmpeg filter complex for cinematic image animations with burned-in subtitles
         
         Args:
             image_paths: List of image paths
             image_duration: Duration for each image
+            script_text: Script text for subtitle extraction
             
         Returns:
             FFmpeg filter complex string
@@ -231,7 +232,7 @@ class VideoService:
         # Create dramatic crossfade transitions between images
         if len(image_paths) == 1:
             # Single image case with fade in/out
-            filter_complex = f"{filters[0]};[v0]fade=t=in:st=0:d=0.5,fade=t=out:st={image_duration-0.5}:d=0.5[output]"
+            base_video = f"{filters[0]};[v0]fade=t=in:st=0:d=0.5,fade=t=out:st={image_duration-0.5}:d=0.5[base]"
         else:
             # Multiple images with cinematic transitions
             transition_duration = 0.8  # Longer crossfade for dramatic effect
@@ -258,15 +259,75 @@ class VideoService:
                     )
                     current_stream = f"fade{i}"
             
-            # Final output with subtle color grading for cinematic look
-            filters.append(
-                f"[{current_stream}]eq=contrast=1.1:brightness=0.05:saturation=1.2,"
-                f"format=yuv420p[output]"
-            )
+            # Base video with color grading
+            base_video = f"[{current_stream}]eq=contrast=1.1:brightness=0.05:saturation=1.2[base]"
             
-            filter_complex = ";".join(filters)
+        # Add burned-in subtitles
+        subtitle_text = self._extract_key_phrases(script_text)
+        subtitle_filter = self._create_subtitle_filter(subtitle_text, len(image_paths) * image_duration)
+        
+        # Combine base video with subtitles
+        final_filter = f"{base_video};[base]{subtitle_filter}[output]"
+        filter_complex = ";".join(filters) + ";" + final_filter
         
         return filter_complex
+    
+    def _extract_key_phrases(self, script_text: str) -> List[str]:
+        """Extract key dramatic phrases from script for subtitles"""
+        import re
+        
+        # Split into sentences and extract impactful phrases
+        sentences = re.split(r'[.!?]+', script_text)
+        key_phrases = []
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence) > 10:  # Skip very short sentences
+                # Look for dramatic phrases or convert to upper case for impact
+                if any(word in sentence.lower() for word in ['what if', 'secret', 'truth', 'never', 'hidden', 'revealed']):
+                    key_phrases.append(sentence.upper())
+                elif len(sentence) < 50:  # Short impactful sentences
+                    key_phrases.append(sentence.upper())
+        
+        # Limit to 3-4 key phrases to avoid overcrowding
+        return key_phrases[:4]
+    
+    def _create_subtitle_filter(self, phrases: List[str], total_duration: float) -> str:
+        """Create FFmpeg filter for burned-in subtitles like your reference images"""
+        if not phrases:
+            return ""
+        
+        # Calculate timing for each phrase
+        phrase_duration = total_duration / len(phrases)
+        
+        # Create subtitle filter with dramatic styling
+        subtitle_filters = []
+        
+        for i, phrase in enumerate(phrases):
+            start_time = i * phrase_duration
+            end_time = (i + 1) * phrase_duration
+            
+            # Clean text for FFmpeg
+            clean_phrase = phrase.replace("'", "\\'").replace('"', '\\"')
+            
+            # Create drawtext filter with GoT-style formatting
+            subtitle_filter = (
+                f"drawtext=text='{clean_phrase}':"
+                f"x=(w-text_w)/2:"  # Center horizontally
+                f"y=h-150:"  # Position near bottom
+                f"fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:"
+                f"fontsize=48:"
+                f"fontcolor=white:"
+                f"borderw=3:"
+                f"bordercolor=black:"
+                f"box=1:"
+                f"boxcolor=black@0.7:"
+                f"boxborderw=10:"
+                f"enable='between(t,{start_time},{end_time})'"
+            )
+            subtitle_filters.append(subtitle_filter)
+        
+        return ",".join(subtitle_filters)
     
     async def optimize_for_youtube_shorts(self, video_path: str) -> Optional[str]:
         """

@@ -13,6 +13,7 @@ This is an automated Telegram bot that creates Game of Thrones lore videos and u
   - Dramatic, engaging voice with strategic pauses
   - YouTube Shorts optimized format matching user's existing channel style
   - Cliffhanger endings and mystery-building throughout
+  - **Burned-in subtitles**: White text with black border and semi-transparent black background box, positioned at bottom of screen, showing key dramatic phrases from the script in ALL CAPS
 
 ## System Architecture
 
