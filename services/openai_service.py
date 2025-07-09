@@ -81,21 +81,29 @@ class OpenAIService:
 
         Requirements:
         - Script should be exactly 45-55 seconds when spoken (approximately 450-500 words)
+        - START with a POWERFUL HOOK that grabs attention immediately
+        - Use dramatic, cinematic language with short punchy sentences
         - Focus on canon lore from the books and show
-        - Include dramatic storytelling elements
-        - Make it engaging for YouTube Shorts audience
+        - Build suspense and mystery throughout
         - Include specific character names, locations, and events
-        - End with a compelling hook or question
+        - End with a compelling cliffhanger or shocking revelation
+        - Make it perfect for YouTube Shorts audience (high engagement)
+
+        HOOK EXAMPLES:
+        - "What if I told you Jon Snow's death was planned all along?"
+        - "This one secret about Daenerys changes everything..."
+        - "The Night King had a plan no one saw coming..."
 
         Provide your response as JSON with these exact fields:
         {{
-            "title": "Engaging video title (60 characters max)",
-            "script": "The complete narration script",
+            "title": "Engaging clickbait title (60 characters max)",
+            "script": "The complete narration script with strong hook",
             "description": "YouTube description with hashtags (500 characters max)",
             "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"] (for image search)
         }}
 
-        Make the script dramatic and captivating, as if narrating an epic fantasy story.
+        Make the script dramatic and captivating, like a movie trailer narrator.
+        Use cliffhangers, mysteries, and "what if" scenarios.
         Include specific Game of Thrones terminology and references that fans will appreciate.
         
         Keywords should be visual terms that will help find relevant medieval/fantasy images:

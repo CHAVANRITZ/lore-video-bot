@@ -180,7 +180,7 @@ class VideoService:
     
     def _build_filter_complex(self, image_paths: List[str], image_duration: float) -> str:
         """
-        Build FFmpeg filter complex for smooth transitions between images
+        Build FFmpeg filter complex for cinematic image animations
         
         Args:
             image_paths: List of image paths
@@ -191,46 +191,78 @@ class VideoService:
         """
         filters = []
         
-        # Scale and crop each image to vertical format
+        # Scale, crop and add cinematic animations to each image
         for i in range(len(image_paths)):
-            filters.append(
-                f"[{i}:v]scale={self.output_width}:{self.output_height}:"
-                f"force_original_aspect_ratio=increase,"
-                f"crop={self.output_width}:{self.output_height},"
-                f"setpts=PTS-STARTPTS[v{i}]"
-            )
+            # Determine animation type based on image position
+            if i % 3 == 0:
+                # Ken Burns zoom in effect
+                animation = (
+                    f"[{i}:v]scale={self.output_width * 2}:{self.output_height * 2}:"
+                    f"force_original_aspect_ratio=increase,"
+                    f"crop={self.output_width}:{self.output_height},"
+                    f"zoompan=z='min(zoom+0.0015,1.5)':d={int(self.fps * image_duration)}:"
+                    f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={self.output_width}x{self.output_height},"
+                    f"setpts=PTS-STARTPTS[v{i}]"
+                )
+            elif i % 3 == 1:
+                # Slow pan right effect
+                animation = (
+                    f"[{i}:v]scale={self.output_width * 1.2}:{self.output_height * 1.2}:"
+                    f"force_original_aspect_ratio=increase,"
+                    f"crop={self.output_width}:{self.output_height},"
+                    f"zoompan=z='1':d={int(self.fps * image_duration)}:"
+                    f"x='if(gte(on,1),x+2,0)':y='ih/2-(ih/zoom/2)':"
+                    f"s={self.output_width}x{self.output_height},"
+                    f"setpts=PTS-STARTPTS[v{i}]"
+                )
+            else:
+                # Slow zoom out effect
+                animation = (
+                    f"[{i}:v]scale={self.output_width * 1.5}:{self.output_height * 1.5}:"
+                    f"force_original_aspect_ratio=increase,"
+                    f"crop={self.output_width}:{self.output_height},"
+                    f"zoompan=z='min(zoom-0.001,1.0)':d={int(self.fps * image_duration)}:"
+                    f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={self.output_width}x{self.output_height},"
+                    f"setpts=PTS-STARTPTS[v{i}]"
+                )
+            
+            filters.append(animation)
         
-        # Create crossfade transitions between images
+        # Create dramatic crossfade transitions between images
         if len(image_paths) == 1:
-            # Single image case
-            filter_complex = f"{filters[0]};[v0]loop=loop=-1:size={int(self.fps * image_duration)}[output]"
+            # Single image case with fade in/out
+            filter_complex = f"{filters[0]};[v0]fade=t=in:st=0:d=0.5,fade=t=out:st={image_duration-0.5}:d=0.5[output]"
         else:
-            # Multiple images with crossfades
-            transition_duration = 0.5  # 0.5 second crossfade
+            # Multiple images with cinematic transitions
+            transition_duration = 0.8  # Longer crossfade for dramatic effect
             
             # Start with first image
             current_stream = "v0"
             
             for i in range(1, len(image_paths)):
                 if i == 1:
-                    # First transition
+                    # First transition with fade
                     filters.append(
-                        f"[{current_stream}][v{i}]xfade=transition=fade:"
+                        f"[{current_stream}][v{i}]xfade=transition=fadeblack:"
                         f"duration={transition_duration}:"
                         f"offset={image_duration - transition_duration}[fade{i}]"
                     )
                     current_stream = f"fade{i}"
                 else:
-                    # Subsequent transitions
+                    # Subsequent transitions alternating effects
+                    transition_type = "wiperight" if i % 2 == 0 else "fadeblack"
                     filters.append(
-                        f"[{current_stream}][v{i}]xfade=transition=fade:"
+                        f"[{current_stream}][v{i}]xfade=transition={transition_type}:"
                         f"duration={transition_duration}:"
                         f"offset={i * image_duration - transition_duration}[fade{i}]"
                     )
                     current_stream = f"fade{i}"
             
-            # Final output
-            filters.append(f"[{current_stream}]format=yuv420p[output]")
+            # Final output with subtle color grading for cinematic look
+            filters.append(
+                f"[{current_stream}]eq=contrast=1.1:brightness=0.05:saturation=1.2,"
+                f"format=yuv420p[output]"
+            )
             
             filter_complex = ";".join(filters)
         

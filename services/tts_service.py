@@ -81,23 +81,37 @@ class TTSService:
     
     def _prepare_text_for_tts(self, text: str) -> str:
         """
-        Prepare text for optimal TTS pronunciation
+        Prepare text for optimal TTS pronunciation with dramatic pacing
         
         Args:
             text: Original text
             
         Returns:
-            Cleaned text optimized for TTS
+            Cleaned text optimized for TTS with dramatic emphasis
         """
         # Remove markdown formatting
         text = text.replace('**', '').replace('*', '')
         text = text.replace('_', '').replace('`', '')
         
-        # Add pauses for dramatic effect
-        text = text.replace('.', '. ')
+        # Add dramatic pauses and emphasis
+        text = text.replace('.', '... ')  # Longer pauses for drama
         text = text.replace('!', '! ')
-        text = text.replace('?', '? ')
-        text = text.replace(',', ', ')
+        text = text.replace('?', '?... ')  # Pause after questions for impact
+        text = text.replace(',', '... ')  # Slight pauses for emphasis
+        text = text.replace(';', '... ')
+        text = text.replace(':', ':... ')
+        
+        # Add emphasis markers for dramatic words
+        dramatic_words = [
+            'death', 'murder', 'betrayal', 'secret', 'hidden', 'revealed', 
+            'shocking', 'truth', 'lie', 'power', 'throne', 'king', 'queen',
+            'dragon', 'war', 'battle', 'blood', 'fire', 'ice', 'prophecy',
+            'destiny', 'fate', 'revenge', 'love', 'hate', 'honor', 'betrayed'
+        ]
+        
+        for word in dramatic_words:
+            text = text.replace(f' {word} ', f' {word.upper()} ')
+            text = text.replace(f' {word.capitalize()} ', f' {word.upper()} ')
         
         # Replace common Game of Thrones names with phonetic versions
         pronunciations = {
@@ -127,14 +141,24 @@ class TTSService:
             'Samwell': 'SAM-well',
             'Gendry': 'GEN-dree',
             'Sandor': 'SAN-door',
-            'Gregor': 'GREG-or'
+            'Gregor': 'GREG-or',
+            'Westeros': 'WEST-er-os',
+            'Essos': 'ESS-os',
+            'Winterfell': 'WIN-ter-fell',
+            'Dragonstone': 'DRAG-on-stone'
         }
         
         # Apply pronunciations
         for name, pronunciation in pronunciations.items():
             text = text.replace(name, pronunciation)
         
-        # Clean up extra spaces
+        # Add strategic pauses at the beginning and key moments
+        if text.startswith(('What if', 'Imagine', 'Picture this')):
+            text = text.replace('What if', 'What if... ')
+            text = text.replace('Imagine', 'Imagine... ')
+            text = text.replace('Picture this', 'Picture this... ')
+        
+        # Clean up extra spaces but preserve strategic pauses
         text = ' '.join(text.split())
         
         return text

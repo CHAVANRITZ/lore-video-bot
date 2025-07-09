@@ -6,7 +6,13 @@ This is an automated Telegram bot that creates Game of Thrones lore videos and u
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+- **Communication style**: Simple, everyday language
+- **Video style requirements**: 
+  - Strong hooks that grab attention immediately (like "What if I told you...")
+  - Cinematic image animations (Ken Burns effect, panning, zooming)
+  - Dramatic, engaging voice with strategic pauses
+  - YouTube Shorts optimized format matching user's existing channel style
+  - Cliffhanger endings and mystery-building throughout
 
 ## System Architecture
 
