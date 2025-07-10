@@ -10,7 +10,7 @@ from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 from config import Config
-from services.openai_service import OpenAIService
+from services.gemini_service import GeminiService
 from services.image_service import ImageService
 from services.tts_service import TTSService
 from services.video_service import VideoService
@@ -27,7 +27,7 @@ class LoreVideoBot:
         self.application = Application.builder().token(config.telegram_bot_token).build()
         
         # Initialize services
-        self.openai_service = OpenAIService(config)
+        self.gemini_service = GeminiService(config)
         self.image_service = ImageService(config)
         self.tts_service = TTSService(config)
         self.video_service = VideoService(config)
@@ -139,7 +139,7 @@ class LoreVideoBot:
         try:
             # Step 1: Generate script
             await update.message.reply_text("📝 Generating Game of Thrones lore script...")
-            script_data = await self.openai_service.generate_got_script(topic)
+            script_data = await self.gemini_service.generate_got_script(topic)
             
             if not script_data:
                 raise Exception("Failed to generate script")
