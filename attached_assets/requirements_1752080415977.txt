@@ -1,4 +1,0 @@
-openai
-gtts
-ffmpeg-python
-python-telegram-bot
