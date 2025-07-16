@@ -5,3 +5,4 @@ openai
 gtts
 ffmpeg-python
 requests
+google-generativeai
