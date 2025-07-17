@@ -1,21 +1,14 @@
 """
 Gemini service for generating Game of Thrones lore scripts (Free Alternative)
 """
-import importlib.util
-import sys
+
 import os
 import json
 import logging
 from typing import Dict, List, Optional
+import google.generativeai as genai  # ✅ Official import
 
-# Manually load genai from full Replit path
-genai_path = ".cache/uv/archive-v0/JwRqrSVtQbSsXV6XFweSD/google/genai/__init__.py"
-spec = importlib.util.spec_from_file_location("google.genai", genai_path)
-genai = importlib.util.module_from_spec(spec)
-sys.modules["google.genai"] = genai
-spec.loader.exec_module(genai)
-
-from google.genai import types
+from google.generativeai.types import GenerateContentConfig
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +23,9 @@ class GeminiService:
             logger.warning("No GEMINI_API_KEY found, service will be limited")
             self.client = None
         else:
-            self.client = genai.Client(api_key=api_key)
-        self.model = "gemini-2.5-flash"
+            genai.configure(api_key=api_key)
+            self.client = genai
+        self.model = "gemini-1.5-flash"  # or "gemini-pro" if needed
 
     async def generate_got_script(self,
                                   topic: str) -> Optional[Dict[str, str]]:
@@ -41,11 +35,11 @@ class GeminiService:
 
             prompt = self._create_got_prompt(topic)
 
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json"))
+            response = self.client.GenerativeModel(
+                self.model).generate_content(
+                    prompt,
+                    generation_config=GenerateContentConfig(
+                        response_mime_type="application/json"))
 
             if not response.text:
                 logger.error("Empty response from Gemini")
@@ -129,8 +123,8 @@ class GeminiService:
             "{script}"
             Add pauses, simplify pronunciations, and ensure flow.
             """
-            response = self.client.models.generate_content(model=self.model,
-                                                           contents=prompt)
+            response = self.client.GenerativeModel(
+                self.model).generate_content(prompt)
             return response.text.strip() if response.text else script
         except Exception as e:
             logger.error(f"Error enhancing script: {e}")
@@ -140,7 +134,7 @@ class GeminiService:
         got_keywords = [
             'westeros', 'essos', 'targaryen', 'stark', 'lannister',
             'baratheon', 'dragon', 'direwolf', 'iron throne', 'wall',
-            'winterfell', 'king\'s landing', 'jon snow', 'daenerys', 'tyrion',
+            'winterfell', "king's landing", 'jon snow', 'daenerys', 'tyrion',
             'arya', 'sansa', 'night king', 'white walker', 'valyrian',
             'dothraki', 'braavos', 'oldtown'
         ]
